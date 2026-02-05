@@ -126,9 +126,8 @@ def filtrar_negocio(df):
     for col in cols_busqueda:
         if col in df.columns:
             #Columna temporal limpia
-            col_temp = col + '_clean'
-            df[col_temp]= df[col].apply(corregir_texto)
-            texto = df[col_temp]
+            df[col]= df[col].apply(corregir_texto)
+            texto = df[col]
             # Inclusión (Tus palabras nuevas)
             mascara_in = pd.Series([False] * len(df), index=df.index)
             for p in PALABRAS_CLAVE:
@@ -145,7 +144,7 @@ def filtrar_negocio(df):
     df_final['TIPO_OPORTUNIDAD'] = 'TECH_ADVANCED'
 
     #Eliminar columnas temporales
-    cols_a_borrar = [c for c in df_final.columns if '_clean' in c or '_limpia' in c or 'moneda_normalizada' in c]
+    cols_a_borrar = [c for c in df_final.columns if 'moneda_limpia' in c or 'moneda_normalizada' in c]
     df_final = df_final.drop(columns=cols_a_borrar)
     return df_final
 
