@@ -2,7 +2,7 @@
 
 Este proyecto es un **Pipeline ETL (Extract, Transform, Load)** automatizado en Python diseñado para analizar miles de licitaciones del estado y detectar oportunidades de negocio específicas para el sector de **Tecnología y Software**, eliminando el ruido de otros rubros.
 
-## Características Principales (Versión 1.5)
+## Características Principales (Versión 1.6)
 
 El algoritmo cuenta con una lógica de filtrado avanzada ("Blindada") que resuelve problemas comunes de calidad de datos:
 
