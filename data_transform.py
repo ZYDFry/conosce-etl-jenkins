@@ -54,7 +54,7 @@ def corregir_texto(texto):
 
 def estadarizar_moneda(df):
     """Normalizar Soles y Dolares"""
-    if 'moneda' not in df.colums:
+    if 'moneda' not in df.columns:
         return df
     df['moneda'] = df['moneda'].astype(str).str.upper().str.strip()
     
