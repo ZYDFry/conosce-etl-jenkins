@@ -101,7 +101,7 @@ def filtrar_negocio(df):
         df.loc[mask_dolar, 'tc_utilizado'] = TIPO_CAMBIO_USD
 
     # 5. Búsqueda Inteligente (Raíces en Descripción)
-    filtro_tech = pd.Series([False] * len(df), index=df.index)
+    filtro_final= pd.Series([False] * len(df), index=df.index)
     cols_busqueda = ['descripcion_item', 'descripcion_proceso']
     
     for col in cols_busqueda:
@@ -120,12 +120,12 @@ def filtrar_negocio(df):
             for p in PALABRAS_EXCLUIR:
                 mascara_out |= texto.str.contains(p, regex=False)
             
-            filtro_final |= (mascara_in & (~mascara_out))
+    filtro_final |= (mascara_in & (~mascara_out))
 
-    df_final = df[filtro_final].copy()
-    df_final['TIPO_OPORTUNIDAD'] = 'TECH_ADVANCED'
+    df= df[filtro_final].copy()
+    df['TIPO_OPORTUNIDAD'] = 'TECH_ADVANCED'
     
-    return df_final
+    return df
 
 def main():
     print("--- 2. TRANSFORMACIÓN ---")
