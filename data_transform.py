@@ -1,4 +1,5 @@
 import pandas as pd
+import unicodedata
 import os
 
 # --- CONFIGURACIÓN DINÁMICA ---
@@ -31,10 +32,17 @@ PALABRAS_EXCLUIR = [
     # Obras y Mantenimiento Físico
     'OBRA', 'CONSTRUCCION', 'MANTENIMIENTO DE VEHICULO', 'PINTURA', 
     'GASFITERIA', 'ALBAÑIL', 'LIMPIEZA', 'JARDINERIA', 'VIGILANCIA',
-    
+    #Inmobiliario
+    'ARRENDAMIENTO', 'ALQUILER', 'INMUEBLE', 'LOCAL', 'OFICINA', 'EDIFICIO', 'PREDIO',
     # Administrativo y Legal
     'ABOGADO', 'JURIDICO', 'NOTARIA', 'CONTABLE', 'AUDITORIA FINANCIERA',
     'SECRETARIA', 'ASISTENTE ADMINISTRATIVO', 'CHOFER',
+    # Defensa y Policial
+    'DEFENSA NACIONAL', 'PNP', 'FUERZAS ARMADAS', 'EJERCITO', 'POLICIAL', 
+    'MILITAR', 'ARMAMENTO'
+    # Palabras trampa de "Desarrollo" no tecnológico
+    'DESARROLLO SOCIAL', 'DESARROLLO URBANO', 'DESARROLLO RURAL', 
+    'DESARROLLO INFANTIL', 'DESARROLLO ECONOMICO', 'DESARROLLO HUMANO',
     
     # Otros rubros no tecnológicos
     'PUBLICIDAD', 'MARKETING', 'TURISMO', 'CATERING', 'ALIMENTOS', 
@@ -46,25 +54,34 @@ def corregir_texto(texto):
     """limpiar tildes rotas y caracteres especiales en un texto"""
     if not isinstance(texto,str):
         return str(texto)
+    texto = texto.upper()
     texto = texto.replace('CI¿N', 'CIÓN').replace('SI¿N', 'SIÓN')
     texto = texto.replace('ELECTR¿NICO', 'ELECTRÓNICO').replace('INFORM¿TICA', 'INFORMÁTICA')
     texto = texto.replace('TECNOLOG¿A', 'TECNOLOGÍA').replace('EDUCACI¿N', 'EDUCACIÓN')
     texto = texto.replace('ER¿A','ERÍA').replace('TR¿A','TRÍA')
-    return texto
+    texto = texto.replace('LOG¿A', 'LOGIA')
+    texto = texto.replace('¿', '')
+    texto_norm = unicodedata.normalize('NFD',texto)
+    texto_st = ''.join(c for c in texto_norm if unicodedata.category(c) != 'Mn')
+    return texto_st.strip()
 
 def estadarizar_moneda(df):
     """Normalizar Soles y Dolares"""
     if 'moneda' not in df.columns:
         return df
-    df['moneda'] = df['moneda'].astype(str).str.upper().str.strip()
+    df['moneda_limpia'] = df['moneda'].apply(corregir_texto)
     
+    #Inicializar con valor por defecto
+    df['moneda_normalizada'] = 'DESCONOCIDO'
     # Soles
-    mask_soles = df['moneda'].str.contains('SOL', na=False) | df['moneda'].str.contains('S/', na=False)
+    mask_soles = df['moneda_limpia'].str.contains('SOL', na=False) | \
+                df['moneda_limpia'].str.contains('S/', na=False)
     df.loc[mask_soles, 'moneda_normalizada'] = 'SOLES'
 
     # Dólares
-    mask_dolar = df['moneda'].str.contains('DOLAR', na=False) | \
-                 df['moneda'].str.contains('USD', na=False)
+    mask_dolar = df['moneda_limpia'].str.contains('DOLAR', na=False) | \
+                 df['moneda_limpia'].str.contains('USD', na=False) | \
+                 df['moneda_limpia'].str.contains('AMERICANO',na = False)
     df.loc[mask_dolar, 'moneda_normalizada'] = 'DOLARES'
 
     return df
@@ -78,6 +95,8 @@ def filtrar_negocio(df):
     total_inicial = len(df)
     df = df.drop_duplicates().copy()
     duplicados_eliminados = total_inicial - len(df)
+    # Eliminar columnas vacías
+    df = df.dropna(axis=1, how='all')
     if duplicados_eliminados > 0:
         print(f"    - Duplicados eliminados: {duplicados_eliminados}")
     # 3. Eliminar sin monto (si aplica)
@@ -106,10 +125,10 @@ def filtrar_negocio(df):
     
     for col in cols_busqueda:
         if col in df.columns:
-            #Corregir texto
-            df[col] = df[col].apply(corregir_texto)
-            # Convertimos a mayúsculas temporalmente para buscar
-            texto = df[col].str.upper().fillna('')
+            #Columna temporal limpia
+            col_temp = col + '_clean'
+            df[col_temp]= df[col].apply(corregir_texto)
+            texto = df[col_temp]
             # Inclusión (Tus palabras nuevas)
             mascara_in = pd.Series([False] * len(df), index=df.index)
             for p in PALABRAS_CLAVE:
@@ -120,12 +139,15 @@ def filtrar_negocio(df):
             for p in PALABRAS_EXCLUIR:
                 mascara_out |= texto.str.contains(p, regex=False)
             
-    filtro_final |= (mascara_in & (~mascara_out))
+            filtro_final |= (mascara_in & (~mascara_out))
 
-    df= df[filtro_final].copy()
-    df['TIPO_OPORTUNIDAD'] = 'TECH_ADVANCED'
-    
-    return df
+    df_final= df[filtro_final].copy()
+    df_final['TIPO_OPORTUNIDAD'] = 'TECH_ADVANCED'
+
+    #Eliminar columnas temporales
+    cols_a_borrar = [c for c in df_final.columns if '_clean' in c or '_limpia' in c or 'moneda_normalizada' in c]
+    df_final = df_final.drop(columns=cols_a_borrar)
+    return df_final
 
 def main():
     print("--- 2. TRANSFORMACIÓN ---")
