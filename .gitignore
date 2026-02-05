@@ -1,0 +1,11 @@
+# Ignorar carpeta de datos pesados
+datasets/
+# Ignorar carpeta de resultados
+Resultados/
+# Ignorar archivos de Python compilados
+__pycache__/
+# Ignorar archivos temporales de Excel (los que empiezan con ~$)
+~$*
+# Ignorar archivos de datos sueltos
+*.pkl
+*.xlsx
