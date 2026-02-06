@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    triggers {
+        // H/2 significa: "Revisar cambios cada 2 minutos aprox"
+        pollSCM 'H/2 * * * *' 
+    }
 
     stages {
         // --- PASO 0: PREPARACIÓN ---
