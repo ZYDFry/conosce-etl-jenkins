@@ -33,5 +33,6 @@ El algoritmo cuenta con una lógica de filtrado avanzada ("Blindada") que resuel
 ##  Instalación y Uso
 
 1. **Clonar el repositorio:**
-   ```bash
-   git clone <URL_DE_TU_REPO>
+   git clone https://github.com/ZYDFry/conosce-etl-jenkins.git
+2. **DATASET**
+   https://github.com/ZYDFry/CONOSCE_DATASET
